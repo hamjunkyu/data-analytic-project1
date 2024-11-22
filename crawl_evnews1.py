@@ -16,24 +16,20 @@ from trafilatura.settings import DEFAULT_CONFIG
 argparser = ArgumentParser("Crawl Naver news articles")
 argparser.add_argument("--output-path", type=str, default="naver_news.json")
 argparser.add_argument("--query", type=str, default="전기차")
-argparser.add_argument("--start-date", type=str, default="2015.12.22")
+argparser.add_argument("--start-date", type=str, default="2024.10.22")
 argparser.add_argument("--end-date", type=str, default="2024.11.21")
-argparser.add_argument("--num-workers", type=int, default=10)
+argparser.add_argument("--num-workers", type=int, default=5)
 argparser.add_argument("--max-trials", type=int, default=3)
 
-# https://trafilatura.readthedocs.io/en/latest/settings.html
 TRAFILATURA_CONFIG = deepcopy(DEFAULT_CONFIG)
-# URL에 대해서 5초 이상 다운로드를 기다리지 않도록 설정
 TRAFILATURA_CONFIG["DEFAULT"]["DOWNLOAD_TIMEOUT"] = "5"
 TRAFILATURA_CONFIG["DEFAULT"]["MAX_REDIRECTS"] = "0"
-# 최소 본문 길이가 10자 이상인 경우에만 사용
 TRAFILATURA_CONFIG["DEFAULT"]["MIN_OUTPUT_SIZE"] = "50"
 
 
 def get_article_body(url: str) -> Optional[Dict[str, Any]]:
     try:
         downloaded = fetch_url(url, config=TRAFILATURA_CONFIG)
-        # 아래 인자에 대해서는 https://trafilatura.readthedocs.io/en/latest/corefunctions.html#extract 참고
         extracted_news_content = extract(
             downloaded,
             output_format="json",
@@ -52,10 +48,9 @@ def get_article_body(url: str) -> Optional[Dict[str, Any]]:
 
 
 def crawl_articles(args: Namespace) -> List[Dict[str, str]]:
-    # Pandas date_range 함수를 사용해서 날짜 범위 생성
+
     dates = date_range(args.start_date, args.end_date, freq="D")
 
-    # URL에 대한 쿼리 인코딩
     encoded_query = quote(args.query)
 
     crawled_urls = set()
@@ -77,10 +72,8 @@ def crawl_articles(args: Namespace) -> List[Dict[str, str]]:
                 request_result = requests.get(next_url)
                 request_result = request_result.json()
             except KeyboardInterrupt:
-                # Ctrl + C 입력 시 프로그램 종료
                 exit()
             except Exception as e:
-                # 네트워크 문제 등으로 인해 요청이 실패한 경우 10초 대기 후 재시도
                 sleep(10)
                 num_trials += 1
                 if num_trials == args.max_trials:
@@ -123,5 +116,5 @@ if __name__ == "__main__":
 
     crawled_articles = crawl_articles(args)
 
-    with open(args.output_path, "w") as f:
-        json.dump(crawled_articles, f, ensure_ascii=False)
+    with open(args.output_path, "w", encoding='utf-8') as f:
+        json.dump(crawled_articles, f, ensure_ascii=False, indent=2)

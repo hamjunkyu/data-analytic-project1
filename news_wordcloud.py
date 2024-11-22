@@ -7,8 +7,8 @@ from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 
 
-def create_wordcloud(file_path):
-    # 데이터 로드
+def create_wordcloud(file_path, content_key):
+    
     with open(file_path, "r", encoding='utf-8') as f:
         news_list = json.load(f)
     
@@ -24,14 +24,14 @@ def create_wordcloud(file_path):
         ("금지", "NNG"), ("출처", "NNG"), ("저작권자", "NNG"), ("무단", "NNG"),
         ("전재", "NNG"), ("전기", "NNG"), ("판매", "NNG"), ("재배포", "NNG"),
         ("학습", "NNG"), ("활용", "NNG"), ("모델", "NNG"), ("출시", "NNG"), 
-        ("자동차", "NNG"), ("AI", "SL")    
+        ("자동차", "NNG"), ("차량", "NNG"), ("AI", "SL")    
     }
     stopwords.add(custom_stopwords)
     
     counter = Counter()
     
     for news in tqdm(news_list, mininterval=1):
-        body_text = news["content"].strip()
+        body_text = news[content_key].strip()
         if len(body_text) < 10:
             continue
             
@@ -57,5 +57,5 @@ def create_wordcloud(file_path):
     plt.show()
     
     
-create_wordcloud("bobaedream_news.json")
-create_wordcloud("naver_news.json")
+create_wordcloud("data/bobaedream_news.json", "content")
+create_wordcloud("data/naver_news.json", "text")
